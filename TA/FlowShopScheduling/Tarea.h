@@ -1,11 +1,3 @@
-/*
- * Proyecto : FlowShopScheduling
- * Archivo  : Tarea.h
- * Autor    : Alex Calero Revilla
- * Codigo   : 20206455
- * Fecha    : 30 de noviembre de 2024, 17:53
- */
-
 #ifndef TAREA_H
 #define TAREA_H
 

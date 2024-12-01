@@ -7,16 +7,16 @@
 // 20212515 - Mikler Diaz Perez
 
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <algorithm>
 #include <climits>
 #include <cstdlib>
 #include <ctime>
 #include "Tarea.h"
-#define ALFA 0.5
 #define MAX_ITERACIONES 1000
-#define MAX_TAREAS 100
-#define MAX_MAQUINAS 100
+#define MAX_TAREAS 20
+#define MAX_MAQUINAS 10
 using namespace std;
 
 // Funcion para calcular el makespan utilizando Programacion Dinamica y matrices estaticas
@@ -36,7 +36,7 @@ bool compara(pair<int, int>a, pair<int, int>b) {
 }
 
 // Fase de construccion de GRASP
-vector<int> construirGRASP(const vector<Tarea>& tareas, int numMaquinas) {
+vector<int> construirGRASP(const vector<Tarea>& tareas, int numMaquinas, double alfa) {
 	vector<int> candidatos, solucion;
 	for (int i = 0; i < tareas.size(); i++) candidatos.push_back(i);
 
@@ -60,7 +60,7 @@ vector<int> construirGRASP(const vector<Tarea>& tareas, int numMaquinas) {
 
 		// Crear RCL (Lista de Candidatos Restringida)
 		vector<int> RCL;
-		int inda = beta + ALFA * (tau - beta);  // Formula
+		int inda = beta + alfa * (tau - beta);  // Formula
 		for(const auto& cm : makespanCandidatos)
 			if(cm.second <= inda)
 				RCL.push_back(cm.first);
@@ -100,14 +100,17 @@ vector<int> busquedaLocal(const vector<Tarea>& tareas, vector<int> secuencia, in
 }
 
 // Funcion general de GRASP
-vector<int> GRASP(const vector<Tarea>& tareas, int numMaquinas) {
+vector<int> GRASP(const vector<Tarea>& tareas, int numMaquinas, double alfa) {
 	vector<int> mejorSecuencia;
 	int mejorMakespan = INT_MAX;
 
 	for(int iter = 0; iter < MAX_ITERACIONES; iter++) {
-		vector<int> secuenciaInicial = construirGRASP(tareas, numMaquinas);
+		vector<int> secuenciaInicial = construirGRASP(tareas, numMaquinas, alfa);
 		vector<int> secuenciaMejorada = busquedaLocal(tareas, secuenciaInicial, numMaquinas);
 		int makespanActual = calcularMakespan(tareas, secuenciaMejorada, numMaquinas);
+
+		// Imprimimos los resultados de cada iteracion
+		cout << "Iteracion " << setw(4) << setfill('0') << iter + 1 << " -> Makespan: " << makespanActual << endl;
 
 		if (makespanActual < mejorMakespan) {
 			mejorMakespan = makespanActual;
@@ -121,22 +124,39 @@ vector<int> GRASP(const vector<Tarea>& tareas, int numMaquinas) {
 int main() {
 	srand(time(0));  // Semilla
 
-	int numTareas = 5, numMaquinas = 5;
+	int numTareas = MAX_TAREAS, numMaquinas = MAX_MAQUINAS;
 
 	vector<Tarea> tareas = {
-		Tarea(1, {2, 3, 4, 3, 3}),
-		Tarea(2, {4, 2, 3, 4, 6}),
-		Tarea(3, {6, 4, 1, 3, 5}),
-		Tarea(4, {8, 5, 4, 8, 7}),
-		Tarea(5, {10, 7, 5, 4, 3})
+		Tarea(1, {3, 4, 2, 5, 6, 2, 4, 3, 6, 7}),
+        Tarea(2, {4, 5, 3, 6, 7, 3, 5, 4, 6, 8}),
+        Tarea(3, {2, 3, 5, 6, 8, 1, 3, 4, 6, 5}),
+        Tarea(4, {6, 7, 8, 5, 4, 7, 6, 5, 4, 3}),
+        Tarea(5, {5, 6, 7, 8, 5, 6, 4, 3, 7, 6}),
+        Tarea(6, {7, 4, 6, 5, 7, 3, 4, 2, 5, 7}),
+        Tarea(7, {8, 3, 5, 4, 6, 4, 3, 5, 6, 7}),
+        Tarea(8, {4, 5, 6, 7, 8, 5, 6, 4, 3, 6}),
+        Tarea(9, {5, 6, 7, 5, 4, 6, 7, 5, 4, 6}),
+        Tarea(10, {3, 4, 5, 6, 7, 4, 5, 3, 6, 7}),
+        Tarea(11, {6, 7, 5, 8, 9, 6, 8, 7, 5, 6}),
+        Tarea(12, {2, 5, 4, 3, 6, 3, 4, 5, 6, 7}),
+        Tarea(13, {4, 6, 3, 5, 7, 4, 6, 5, 4, 5}),
+        Tarea(14, {7, 6, 8, 5, 6, 7, 6, 5, 4, 3}),
+        Tarea(15, {5, 7, 6, 5, 4, 6, 5, 4, 6, 7}),
+        Tarea(16, {3, 5, 4, 6, 7, 5, 6, 3, 4, 6}),
+        Tarea(17, {4, 3, 5, 6, 6, 4, 5, 4, 3, 7}),
+        Tarea(18, {5, 4, 7, 6, 5, 3, 5, 6, 5, 4}),
+        Tarea(19, {6, 5, 4, 7, 8, 5, 6, 4, 3, 4}),
+        Tarea(20, {7, 6, 5, 6, 7, 6, 5, 4, 3, 5})
 	};
 
-	vector<int> mejorSecuencia = GRASP(tareas, numMaquinas);
+	// Luego de ejecutar el proyecto FlowShopSchedulingTest, seleccionamos el mejor valor de alfa
+	double alfa = 0.45;
+	vector<int> mejorSecuencia = GRASP(tareas, numMaquinas, alfa);
 
-	cout << "Mejor secuencia optima: ";
+	cout << "Mejor secuencia: ";
 	for (const auto& tarea : mejorSecuencia)
 		cout << tareas[tarea].GetId() << " ";
-	cout << "\nMejor Makespan: " << calcularMakespan(tareas, mejorSecuencia, numMaquinas) << endl;
+	cout << "\nMejor makespan: " << calcularMakespan(tareas, mejorSecuencia, numMaquinas) << endl;
 
 	return 0;
 }
